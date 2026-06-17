@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Gale Archive</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="vignette-overlay"></div>
+    <div class="overlay-gradient"></div>
+    
+    <div class="dust-overlay"></div>
+
+    <div class="marginalia marginalia-left">
+        <div class="marginalia-text">CLINICAL KNOWLEDGE RETRIEVAL</div>
+    </div>
+    <div class="marginalia marginalia-right">
+        <div class="marginalia-text">NATURAL LANGUAGE INFERENCE</div>
+    </div>
+
+    <div id="thought-logs-left" class="thought-logs left"></div>
+    <div id="thought-logs-right" class="thought-logs right"></div>
+    
+    <div class="container {% if messages %}chat-active{% endif %}" id="main-container">
+        <header>
+            <div class="header-titles">
+                <span class="badge">Gale Encyclopedia of Medicine</span>
+                <h1>The Gale <em>Archive</em></h1>
+            </div>
+            <a href="/clear" class="clear-btn">Reset Session</a>
+        </header>
+
+        <main class="chat-interface" id="chat-box">
+            {% if error %}
+                <div class="error-box">
+                    <p>{{ error }}</p>
+                </div>
+            {% endif %}
+
+            {% if not messages %}
+                <div class="hero-state" id="hero-state">
+                    <h2>
+                        <span class="reveal-text" style="animation-delay: 0.1s;">Understand</span> 
+                        <span class="reveal-text" style="animation-delay: 0.2s;">your</span> 
+                        <span class="reveal-text" style="animation-delay: 0.3s;">health</span> 
+                        <br>
+                        <em class="reveal-text" style="animation-delay: 0.4s;">with clinical precision.</em>
+                    </h2>
+                    <p class="reveal-text" style="animation-delay: 0.6s;">Clear, evidence-based answers mapped directly from the encyclopedia.</p>
+                </div>
+            {% else %}
+                <div class="message-feed">
+                    {% for msg in messages %}
+                        {% if msg.role == 'user' %}
+                            <div class="message-row user">
+                                <div class="message-label">YOU</div>
+                                <div class="message-content user-query">
+                                    {{ msg.content }}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="message-row assistant">
+                                <div class="message-label">Analysis</div>
+                                <div class="message-content markdown-body">
+                                    <template class="raw-data">{{ msg.content }}</template>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </main>
+
+        <div class="input-container reveal-text" style="animation-delay: 0.8s;">
+            <form id="chat-form" autocomplete="off">
+                <input type="text" name="prompt" placeholder="Enter your clinical query..." required autofocus>
+                <button type="submit">Extract Data</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        marked.setOptions({ breaks: true });
+        const chatBox = document.getElementById("chat-box");
+        const form = document.getElementById("chat-form");
+        const inputField = form.querySelector('input[name="prompt"]');
+        const mainContainer = document.getElementById("main-container");
+
+        // Thinking Logs Logic
+        const thoughtPhrases = [
+            "> Parsing clinical taxonomy...",
+            "> Cross-referencing Gale Database...",
+            "> Isolating key pathological markers...",
+            "> Synthesizing medical literature...",
+            "> Evaluating diagnostic criteria...",
+            "> Aligning symptom vectors...",
+            "> Querying peer-reviewed journals...",
+            "> Formatting evidence-based response..."
+        ];
+
+        let thoughtInterval;
+
+        function startThinkingLogs() {
+            const leftContainer = document.getElementById('thought-logs-left');
+            const rightContainer = document.getElementById('thought-logs-right');
+
+            thoughtInterval = setInterval(() => {
+                const phrase = thoughtPhrases[Math.floor(Math.random() * thoughtPhrases.length)];
+                const isLeft = Math.random() > 0.5;
+                const container = isLeft ? leftContainer : rightContainer;
+
+                const logEl = document.createElement('div');
+                logEl.className = 'log-line';
+                logEl.innerText = phrase;
+
+                logEl.style.marginTop = (Math.random() * 30 - 15) + 'px';
+
+                container.appendChild(logEl);
+
+                setTimeout(() => {
+                    if (container.contains(logEl)) {
+                        logEl.remove();
+                    }
+                }, 4000); 
+
+            }, 1000); 
+        }
+
+        function stopThinkingLogs() {
+            clearInterval(thoughtInterval);
+            document.getElementById('thought-logs-left').innerHTML = '';
+            document.getElementById('thought-logs-right').innerHTML = '';
+        }
+
+        function scrollToBottom() {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        document.querySelectorAll('.markdown-body').forEach(el => {
+            const template = el.querySelector('.raw-data');
+            if (template) {
+                let rawText = template.innerHTML;
+                rawText = rawText.replace(/\*\*(.*?)\*\*\s+(?=[A-Z])/g, '\n### $1\n\n');
+                el.innerHTML = marked.parse(rawText);
+            }
+        });
+        scrollToBottom();
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const userText = inputField.value.trim();
+            if (!userText) return;
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+
+            inputField.readOnly = true;
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.3'; 
+            submitBtn.style.cursor = 'not-allowed';
+
+            inputField.value = ''; 
+
+            mainContainer.classList.add('chat-active');
+
+            let feed = document.querySelector('.message-feed');
+            let hero = document.getElementById('hero-state');
+
+            if (hero) {
+                hero.style.transition = "opacity 0.4s ease";
+                hero.style.opacity = "0";
+                await new Promise(r => setTimeout(r, 400));
+                chatBox.innerHTML = '<div class="message-feed"></div>';
+                feed = document.querySelector('.message-feed');
+            } else if (!feed) {
+                chatBox.innerHTML = '<div class="message-feed"></div>';
+                feed = document.querySelector('.message-feed');
+            }
+
+            feed.innerHTML += `
+                <div class="message-row user">
+                    <div class="message-label">YOU</div>
+                    <div class="message-content user-query">${userText}</div>
+                </div>
+            `;
+            
+            const loaderId = 'loader-' + Date.now();
+            feed.innerHTML += `
+                <div class="message-row assistant" id="${loaderId}">
+                    <div class="message-label">Analysis</div>
+                    <div class="message-content"><div class="medical-loader">+</div></div>
+                </div>
+            `;
+            scrollToBottom();
+
+            startThinkingLogs();
+
+            const formData = new FormData();
+            formData.append('prompt', userText);
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const htmlText = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const templates = doc.querySelectorAll('.raw-data');
+                let rawText = templates.length > 0 ? templates[templates.length - 1].innerHTML : "Error: Could not retrieve response.";
+                
+                rawText = rawText.replace(/\*\*(.*?)\*\*\s+(?=[A-Z])/g, '\n### $1\n\n');
+
+                stopThinkingLogs();
+
+                document.getElementById(loaderId).remove();
+
+                const msgId = 'msg-' + Date.now();
+                feed.innerHTML += `
+                    <div class="message-row assistant">
+                        <div class="message-label">Analysis</div>
+                        <div class="message-content markdown-body" id="${msgId}"></div>
+                    </div>
+                `;
+
+                const msgElement = document.getElementById(msgId);
+                let i = 0;
+                let currentText = "";
+                
+                function typeWriter() {
+                    if (i < rawText.length) {
+                        currentText += rawText.charAt(i);
+                        msgElement.innerHTML = marked.parse(currentText);
+                        scrollToBottom();
+                        i++;
+                        setTimeout(typeWriter, Math.random() * 15 + 5); 
+                    } else {
+                        inputField.readOnly = false;
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.style.cursor = 'pointer';
+                        inputField.focus(); 
+                    }
+                }
+                typeWriter();
+
+            } catch (error) {
+                stopThinkingLogs(); 
+                document.getElementById(loaderId).innerHTML = `<span style="color:red; font-size:1rem;">Connection error. Please try again.</span>`;
+                
+                inputField.readOnly = false;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            }
+        });
+    </script>
+</body>
+</html>
