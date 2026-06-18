@@ -63,7 +63,7 @@ body {
 
 /* NEW: Uniform Synchronized Pulse with higher baseline opacity */
 @keyframes uniformPulse {
-    0%, 100% { opacity: 0.25; filter: blur(1px); } /* Never completely fades away */
+    0%, 100% { opacity: 0.25; filter: blur(1px); } 
     50% { opacity: 0.45; filter: blur(0px); }
 }
 
@@ -119,7 +119,6 @@ body {
     z-index: 1;
     background-image: radial-gradient(circle, var(--accent) 1px, transparent 1px);
     background-size: 50px 50px; 
-    /* NEW: Changed to a 6-second breathing pulse */
     animation: dustDrift 40s linear infinite, uniformPulse 6s ease-in-out infinite;
 }
 
@@ -513,6 +512,8 @@ button:hover {
     .container, .container.chat-active {
         padding: 1rem 1.5rem; 
         max-width: 100%; 
+        width: 100%;
+        overflow-x: hidden;
     }
     
     .vignette-overlay { display: none; } 
@@ -546,18 +547,25 @@ button:hover {
         font-size: 1.4rem; 
         margin-top: 1.5rem;
     }
+
+    .input-container {
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
     
     form {
         padding: 0.3rem; 
+        width: 100%;
     }
     
     input {
-        font-size: 1rem;
+        font-size: 16px !important; /* Prevents auto-zoom alignment distortion */
         padding: 0 1rem;
+        width: 100%;
     }
     
     button {
         padding: 0.6rem 1rem;
         font-size: 0.75rem;
+        white-space: nowrap;
     }
 }
