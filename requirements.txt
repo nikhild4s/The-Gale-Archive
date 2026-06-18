@@ -1,8 +1,7 @@
 langchain==0.3.27
 langchain-community==0.3.31
-langchain_huggingface==0.3.1
 langchain_groq==0.3.8
-huggingface_hub
+fastembed
 pypdf
 flask
 python-dotenv

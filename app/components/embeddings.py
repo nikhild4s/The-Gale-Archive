@@ -1,29 +1,24 @@
-import os
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from app.common.logger import get_logger
 from app.common.custom_exceptions import CustomException
 
 #logger init
 logger = get_logger(__name__)
 
-#logic to create embeddings using HuggingFace Cloud API
+#logic to create embeddings using FastEmbed (Zero-Network, Low-RAM)
 def get_embedding_model():
     try:
-        logger.info("Initializing HuggingFace Cloud Embeddings API...")
+        logger.info("Initializing FastEmbed Local Embeddings...")
         
-        hf_token = os.environ.get("HF_TOKEN")
-        if not hf_token:
-            raise ValueError("HF_TOKEN is missing. Please add it to your Render dashboard.")
-
-        model = HuggingFaceInferenceAPIEmbeddings(
-            api_key=hf_token,
+        # Runs locally without PyTorch, completely bypassing Render's broken DNS
+        model = FastEmbedEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
         
-        logger.info("Successfully initialized Cloud Embedding model!")
+        logger.info("Successfully initialized FastEmbed Embedding model!")
         return model
     
     except Exception as e:
-        error_message = CustomException(f"Error initializing Cloud Embeddings model: {str(e)}")
+        error_message = CustomException(f"Error initializing FastEmbed model: {str(e)}")
         logger.error(str(error_message))
         raise error_message
