@@ -2,6 +2,8 @@ from flask import Flask,render_template,request,session,redirect,url_for
 from app.components.retriever import create_qa_chain
 from dotenv import load_dotenv
 import os
+import traceback # INJECTED: This will pull the exact crash report
+import sys       # INJECTED: Forces the log to print immediately
 
 load_dotenv()
 
@@ -41,7 +43,16 @@ def index():
 
                 messages.append({"role": "assistant", "content":result})
                 session["messages"] = messages
+                
             except Exception as e:
+                # --- INJECTED DIAGNOSTIC LOGGING ---
+                print("\n" + "="*50, file=sys.stderr)
+                print("!!! CRITICAL BACKEND ERROR CAUGHT !!!", file=sys.stderr)
+                print("="*50, file=sys.stderr)
+                traceback.print_exc(file=sys.stderr) 
+                print("="*50 + "\n", file=sys.stderr, flush=True)
+                # -----------------------------------
+                
                 error_msg = f"Error : {str(e)}"
 
                 return render_template(
