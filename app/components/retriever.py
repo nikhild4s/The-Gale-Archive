@@ -4,6 +4,8 @@ from app.components.vector_store import load_vector_store
 from app.components.llm import load_llm
 from app.common.logger import get_logger
 from app.common.custom_exceptions import CustomException
+import sys
+import traceback
 
 logger = get_logger(__name__)
 
@@ -62,6 +64,5 @@ def create_qa_chain():
         return qa_chain
         
     except Exception as e:
-        error_message = CustomException("Failed to make a QA chain",e)
-        logger.error(str(error_message))
-        return None
+        # Pass the exact error directly back to app.py so Render logs it!
+        raise e
